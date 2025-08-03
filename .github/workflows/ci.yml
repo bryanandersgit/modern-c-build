@@ -149,7 +149,8 @@ jobs:
       - name: Install coverage tools
         run: |
           sudo apt-get update
-          sudo apt-get install -y gcov lcov
+          sudo apt-get install -y lcov python3-pip
+          sudo python3 -m pip install gcovr
 
       - name: Setup vcpkg
         uses: lukka/run-vcpkg@v11
