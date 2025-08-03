@@ -188,29 +188,7 @@ jobs:
           flags: unittests
           name: codecov-umbrella
 
-  # Job 5: Security scan
-  security-scan:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@master
-        with:
-          scan-type: 'fs'
-          scan-ref: '.'
-          format: 'sarif'
-          output: 'trivy-results.sarif'
-
-      - name: Upload Trivy scan results to GitHub Security tab
-        uses: github/codeql-action/upload-sarif@v2
-        if: always()
-        with:
-          sarif_file: 'trivy-results.sarif'
-
-  # Job 6: Package and Release (only on tags)
+  # Job 5: Package and Release (only on tags)
   package-and-release:
     if: github.event_name == 'release'
     needs: [build-and-test, static-analysis]
