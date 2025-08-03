@@ -1,7 +1,8 @@
 #include "file_utils.h"
+#include <errno.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <errno.h>
 #include <string.h>
 
 #ifdef _WIN32
@@ -61,8 +62,16 @@ char *read_entire_file(const char *filepath) {
         return NULL;
     }
 
+    if ((unsigned long) size > SIZE_MAX - 1) {
+        fprintf(stderr, "File '%s' is too large\n", filepath);
+        fclose(file);
+        return NULL;
+    }
+
+    size_t file_size = (size_t) size;
+
     // Allocate buffer
-    char *buffer = malloc(size + 1);
+    char *buffer = malloc(file_size + 1);
     if (!buffer) {
         fprintf(stderr, "Error allocating memory for file '%s'\n", filepath);
         fclose(file);
@@ -70,7 +79,7 @@ char *read_entire_file(const char *filepath) {
     }
 
     // Read file
-    size_t bytes_read = fread(buffer, 1, size, file);
+    size_t bytes_read = fread(buffer, 1, file_size, file);
     fclose(file);
 
     if (bytes_read != (size_t)size) {
