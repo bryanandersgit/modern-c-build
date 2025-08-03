@@ -14,9 +14,12 @@ paths = [
     '''docs/.*''',
     '''test/.*''',
     '''examples/.*''',
+    '''\.github/.*''',
 ]
 
 [[rules]]
 id = "aws-access-token"
-[[rules.allowlist]]
-paths = ['''.*\.md$''']
+
+[rules.allowlist]  # This is a map/object, not an array
+description = "Allow AWS examples in documentation"
+paths = ['''.*\.md$''', '''docs/.*''']
