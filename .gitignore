@@ -61,3 +61,6 @@ dkms.conf
 
 # build
 build
+
+# vcpkg dependencies
+vcpkg_installed
