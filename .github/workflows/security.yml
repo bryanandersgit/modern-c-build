@@ -83,7 +83,7 @@ jobs:
 #        uses: lukka/run-vcpkg@v11
 #        with:
 #          vcpkgDirectory: '${{ github.workspace }}/vcpkg'
-#          vcpkgGitCommitId: '${VCPKG_COMMIT_ID}'
+#          vcpkgGitCommitId: '${{ vars.VCPKG_COMMIT_ID }}'
 #          vcpkgJsonGlob: '**/vcpkg.json'
 #
 #      - name: Configure and Build
@@ -155,7 +155,7 @@ jobs:
         uses: lukka/run-vcpkg@v11
         with:
           vcpkgDirectory: '${{ github.workspace }}/vcpkg'
-          vcpkgGitCommitId: '${VCPKG_COMMIT_ID}'
+          vcpkgGitCommitId: '${{ vars.VCPKG_COMMIT_ID }}'
           vcpkgJsonGlob: '**/vcpkg.json'
 
       - name: Check dependency licenses
