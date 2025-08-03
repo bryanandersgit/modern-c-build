@@ -183,10 +183,14 @@ jobs:
 
       - name: Generate coverage report
         run: |
-          lcov --directory build --capture --output-file coverage.info
-          lcov --remove coverage.info '/usr/*' --output-file coverage.info
-          lcov --remove coverage.info '*/vcpkg_installed/*' --output-file coverage.info
-          lcov --list coverage.info
+          # Generate initial coverage data
+          lcov --directory build --capture --output-file coverage_raw.info
+          
+          # Filter out unwanted files
+          lcov --extract coverage_raw.info \
+          '*/src/*' \
+          '*/include/*' \
+          --output-file coverage.info
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3
