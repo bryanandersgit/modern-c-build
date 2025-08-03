@@ -6,9 +6,9 @@ if(DEFINED ENV{VCPKG_ROOT} AND NOT DEFINED CMAKE_TOOLCHAIN_FILE) # automatic vcp
     message(STATUS "Using vcpkg toolchain: ${CMAKE_TOOLCHAIN_FILE}")
 endif()
 
-project(ModernCDemo
+project(ModernCBuild
     VERSION 1.0.0 # set these vars, step 1 of cmake project discovery
-    DESCRIPTION "Modern C Development Examples"
+    DESCRIPTION "Modern C Build Exploration"
     LANGUAGES C)
 
 
