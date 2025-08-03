@@ -2,8 +2,7 @@
 cmake_minimum_required(VERSION 3.20)
 
 if(DEFINED ENV{VCPKG_ROOT} AND NOT DEFINED CMAKE_TOOLCHAIN_FILE) # automatic vcpktg
-    set(CMAKE_TOOLCHAIN_FILE "$ENV{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
-            CACHE STRING "")
+    set(CMAKE_TOOLCHAIN_FILE "$ENV{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake" CACHE STRING "")
     message(STATUS "Using vcpkg toolchain: ${CMAKE_TOOLCHAIN_FILE}")
 endif()
 
@@ -12,21 +11,10 @@ project(ModernCDemo
     DESCRIPTION "Modern C Development Examples"
     LANGUAGES C)
 
-# Find packages (installed automatically from vcpkg.json)
-find_package(cjson CONFIG QUIET)
-if(NOT cjson_FOUND) # graceful fallback
-    find_package(PkgConfig REQUIRED)
-    pkg_check_modules(CJSON REQUIRED libcjson)
-    # Create imported target for compatibility
-    add_library(cjson INTERFACE IMPORTED)
-    target_link_libraries(cjson INTERFACE ${CJSON_LIBRARIES})
-    target_include_directories(cjson INTERFACE ${CJSON_INCLUDE_DIRS})
-endif()
 
+find_package(cJSON CONFIG REQUIRED)
 find_package(CURL CONFIG REQUIRED)
-find_package(SQLite3 CONFIG REQUIRED)
-
-target_link_libraries(myapp PRIVATE cjson CURL::libcurl SQLite::SQLite3)
+find_package(SQLite3 REQUIRED)
 
 # Set C standard
 set(CMAKE_C_STANDARD 17) # parsing sets is step 2 of cmake project discovery
@@ -66,6 +54,12 @@ add_executable(calculator
     src/math_utils.c)
 # create an include/ dir for calculator only used by calculator
 target_include_directories(calculator PRIVATE include) # duplicate imports in TargetDirectory.txt caused by duplicate includes in these statements
+
+target_link_libraries(calculator PRIVATE
+        cjson
+        CURL::libcurl
+        SQLite::SQLite3
+)
 
 # Example 3: Static library
 add_library(myutils STATIC # creates a static library (.a file in linux, .lib on windows)
