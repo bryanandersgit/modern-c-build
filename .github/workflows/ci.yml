@@ -40,7 +40,7 @@ jobs:
           vcpkgDirectory: '${{ github.workspace }}/vcpkg'
           # The Git commit id of vcpkg to be checked out. This is only used if
           # vcpkgGitCommitId is not specified.
-          vcpkgGitCommitId: 'a42af01b72c28a8e1d7b48107b33e4f286a55ef6'
+          vcpkgGitCommitId: '903956eff7cb94774a9e805ff573c000afc43e3e'
           # The vcpkg.json file, which will be part of cache key computation.
           vcpkgJsonGlob: '**/vcpkg.json'
 
@@ -85,7 +85,7 @@ jobs:
         uses: lukka/run-vcpkg@v11
         with:
           vcpkgDirectory: '${{ github.workspace }}/vcpkg'
-          vcpkgGitCommitId: 'a42af01b72c28a8e1d7b48107b33e4f286a55ef6'
+          vcpkgGitCommitId: '903956eff7cb94774a9e805ff573c000afc43e3e'
           vcpkgJsonGlob: '**/vcpkg.json'
 
       - name: Configure CMake with clang-tidy
@@ -115,7 +115,7 @@ jobs:
         uses: lukka/run-vcpkg@v11
         with:
           vcpkgDirectory: '${{ github.workspace }}/vcpkg'
-          vcpkgGitCommitId: 'a42af01b72c28a8e1d7b48107b33e4f286a55ef6'
+          vcpkgGitCommitId: '903956eff7cb94774a9e805ff573c000afc43e3e'
           vcpkgJsonGlob: '**/vcpkg.json'
 
       - name: Configure CMake
@@ -168,7 +168,7 @@ jobs:
         uses: lukka/run-vcpkg@v11
         with:
           vcpkgDirectory: '${{ github.workspace }}/vcpkg'
-          vcpkgGitCommitId: 'a42af01b72c28a8e1d7b48107b33e4f286a55ef6'
+          vcpkgGitCommitId: '903956eff7cb94774a9e805ff573c000afc43e3e'
           vcpkgJsonGlob: '**/vcpkg.json'
 
       - name: Configure CMake with coverage
@@ -238,7 +238,7 @@ jobs:
         uses: lukka/run-vcpkg@v11
         with:
           vcpkgDirectory: '${{ github.workspace }}/vcpkg'
-          vcpkgGitCommitId: 'a42af01b72c28a8e1d7b48107b33e4f286a55ef6'
+          vcpkgGitCommitId: '903956eff7cb94774a9e805ff573c000afc43e3e'
           vcpkgJsonGlob: '**/vcpkg.json'
 
       - name: Configure CMake
