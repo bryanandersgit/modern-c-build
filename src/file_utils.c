@@ -86,7 +86,7 @@ char *read_entire_file(const char *filepath) {
 bool write_string_to_file(const char *filepath, const char *content) {
     if (!filepath || !content) return false;
 
-    FILE *file = fopen(filepath, "w");
+    FILE *file = fopen(filepath, "wb");  // Use binary mode to avoid line ending conversion
     if (!file) {
         fprintf(stderr, "Error opening file '%s' for writing: %s\n",
                 filepath, strerror(errno));
