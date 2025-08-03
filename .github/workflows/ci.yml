@@ -189,7 +189,6 @@ jobs:
           # Filter out unwanted files
           lcov --extract coverage_raw.info \
           '*/src/*' \
-          '*/include/*' \
           --output-file coverage.info
 
       - name: Upload coverage to Codecov
