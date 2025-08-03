@@ -22,7 +22,7 @@ jobs:
         build_type: [Release, Debug]
 
     runs-on: ${{ matrix.os }}
-    environment: build
+    environment: Build
     
     steps:
       - name: Checkout repository
@@ -41,7 +41,7 @@ jobs:
           vcpkgDirectory: '${{ github.workspace }}/vcpkg'
           # The Git commit id of vcpkg to be checked out. This is only used if
           # vcpkgGitCommitId is not specified.
-          vcpkgGitCommitId: '${VCPKG_COMMIT_ID}'
+          vcpkgGitCommitId: '${{ vars.VCPKG_COMMIT_ID }}'
           # The vcpkg.json file, which will be part of cache key computation.
           vcpkgJsonGlob: '**/vcpkg.json'
 
@@ -69,7 +69,7 @@ jobs:
   # Job 2: Static Analysis with clang-tidy
   static-analysis:
     runs-on: ubuntu-latest
-    environment: build
+    environment: Build
 
     steps:
       - name: Checkout repository
@@ -84,7 +84,7 @@ jobs:
         uses: lukka/run-vcpkg@v11
         with:
           vcpkgDirectory: '${{ github.workspace }}/vcpkg'
-          vcpkgGitCommitId: '${VCPKG_COMMIT_ID}'
+          vcpkgGitCommitId: '${{ vars.VCPKG_COMMIT_ID }}'
           vcpkgJsonGlob: '**/vcpkg.json'
 
       - name: Configure CMake with clang-tidy
@@ -96,7 +96,7 @@ jobs:
   # Job 3: Memory check with Valgrind (Linux only)
   memory-check:
     runs-on: ubuntu-latest
-    environment: build
+    environment: Build
 
     steps:
       - name: Checkout repository
@@ -111,7 +111,7 @@ jobs:
         uses: lukka/run-vcpkg@v11
         with:
           vcpkgDirectory: '${{ github.workspace }}/vcpkg'
-          vcpkgGitCommitId: '${VCPKG_COMMIT_ID}'
+          vcpkgGitCommitId: '${{ vars.VCPKG_COMMIT_ID }}'
           vcpkgJsonGlob: '**/vcpkg.json'
 
       - name: Configure CMake
@@ -134,7 +134,7 @@ jobs:
   # Job 4: Code Coverage (Linux only)
   coverage:
     runs-on: ubuntu-latest
-    environment: build
+    environment: Build
 
     steps:
       - name: Checkout repository
@@ -162,7 +162,7 @@ jobs:
         uses: lukka/run-vcpkg@v11
         with:
           vcpkgDirectory: '${{ github.workspace }}/vcpkg'
-          vcpkgGitCommitId: '${VCPKG_COMMIT_ID}'
+          vcpkgGitCommitId: '${{ vars.VCPKG_COMMIT_ID }}'
           vcpkgJsonGlob: '**/vcpkg.json'
 
       - name: Configure CMake with coverage
@@ -194,8 +194,11 @@ jobs:
 
   # Job 5: Package and Release (only on tags)
   package-and-release:
+    if: github.event_name == 'release'
+    needs: [ build-and-test, static-analysis ]
+
     runs-on: ubuntu-latest
-    environment: build
+    environment: Build
     permissions:
       contents: write
 
@@ -207,7 +210,7 @@ jobs:
         uses: lukka/run-vcpkg@v11
         with:
           vcpkgDirectory: '${{ github.workspace }}/vcpkg'
-          vcpkgGitCommitId: '${VCPKG_COMMIT_ID}'
+          vcpkgGitCommitId: '${{ vars.VCPKG_COMMIT_ID }}'
           vcpkgJsonGlob: '**/vcpkg.json'
 
       - name: Configure CMake

@@ -1,0 +1,25 @@
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Allow common false positives"
+
+secrets = [
+    "AKIAIMNOJVGFDXXXE4OA",  # AWS documentation example
+    "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY",  # AWS example secret key
+]
+
+paths = [
+    '''README\.md''',
+    '''docs/.*''',
+    '''test/.*''',
+    '''examples/.*''',
+    '''\.github/.*''',
+]
+
+[[rules]]
+id = "aws-access-token"
+
+[rules.allowlist]  # This is a map/object, not an array
+description = "Allow AWS examples in documentation"
+paths = ['''.*\.md$''', '''docs/.*''']
