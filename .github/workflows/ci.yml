@@ -20,46 +20,231 @@ jobs:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
         build_type: [Release, Debug]
-        
+
     runs-on: ${{ matrix.os }}
     
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
-      with:
-        submodules: recursive
-        
-    - name: Get latest CMake
-      uses: lukka/get-cmake@latest
-      
-    - name: Setup vcpkg
-      uses: lukka/run-vcpkg@v11
-      with:
-        # This specifies the location of vcpkg, where it is going to be restored and built as part of the workflow.
-        vcpkgDirectory: '${{ github.workspace }}/vcpkg'
-        # The git commit of vcpkg when I initially cloned it and built the manifest
-        vcpkgGitCommitId: '903956eff7cb94774a9e805ff573c000afc43e3e'
-        vcpkgJsonGlob: '**/vcpkg.json'
-        
-    - name: Configure CMake
-      run: |
-        cmake -B ${{ github.workspace }}/build \
-              -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
-              -DCMAKE_TOOLCHAIN_FILE=${{ github.workspace }}/vcpkg/scripts/buildsystems/vcpkg.cmake
-              
-    - name: Build
-      run: cmake --build ${{ github.workspace }}/build --config ${{ matrix.build_type }}
-      
-    - name: Test
-      working-directory: ${{ github.workspace }}/build
-      run: ctest -C ${{ matrix.build_type }} --output-on-failure
-      
-    - name: Upload build artifacts
-      uses: actions/upload-artifact@v4
-      if: matrix.build_type == 'Release'
-      with:
-        name: binaries-${{ matrix.os }}
-        path: |
-          build/bin/*
-          build/*.exe
-        retention-days: 30
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Get latest CMake
+        uses: lukka/get-cmake@latest
+
+      - name: Setup vcpkg
+        uses: lukka/run-vcpkg@v11
+        with:
+          # This specifies the location of vcpkg, where it is going to be restored
+          # and built as part of the workflow.
+          vcpkgDirectory: '${{ github.workspace }}/vcpkg'
+          # The Git commit id of vcpkg to be checked out. This is only used if
+          # vcpkgGitCommitId is not specified.
+          vcpkgGitCommitId: 'a42af01b72c28a8e1d7b48107b33e4f286a55ef6'
+          # The vcpkg.json file, which will be part of cache key computation.
+          vcpkgJsonGlob: '**/vcpkg.json'
+
+      - name: Configure CMake
+        run: >
+          cmake -B ${{ github.workspace }}/build
+          -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
+          -DCMAKE_TOOLCHAIN_FILE=${{ github.workspace }}/vcpkg/scripts/buildsystems/vcpkg.cmake
+
+      - name: Build
+        run: cmake --build ${{ github.workspace }}/build --config ${{ matrix.build_type }}
+
+      - name: Test
+        working-directory: ${{ github.workspace }}/build
+        run: ctest -C ${{ matrix.build_type }} --output-on-failure
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        if: matrix.build_type == 'Release'
+        with:
+          name: binaries-${{ matrix.os }}
+          path: |
+            build/bin/*
+            build/Release/*.exe
+            build/*.exe
+          retention-days: 30
+
+  # Job 2: Static Analysis with clang-tidy
+  static-analysis:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install clang-tidy
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang-tidy
+
+      - name: Setup vcpkg
+        uses: lukka/run-vcpkg@v11
+        with:
+          vcpkgDirectory: '${{ github.workspace }}/vcpkg'
+          vcpkgGitCommitId: 'a42af01b72c28a8e1d7b48107b33e4f286a55ef6'
+          vcpkgJsonGlob: '**/vcpkg.json'
+
+      - name: Configure CMake with clang-tidy
+        run: >
+          cmake -B build
+          -DCMAKE_BUILD_TYPE=Debug
+          -DCMAKE_TOOLCHAIN_FILE=${{ github.workspace }}/vcpkg/scripts/buildsystems/vcpkg.cmake
+          -DCMAKE_C_CLANG_TIDY="clang-tidy;--warnings-as-errors=*"
+
+      - name: Build with static analysis
+        run: cmake --build build
+
+  # Job 3: Memory check with Valgrind (Linux only)
+  memory-check:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Valgrind
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y valgrind
+
+      - name: Setup vcpkg
+        uses: lukka/run-vcpkg@v11
+        with:
+          vcpkgDirectory: '${{ github.workspace }}/vcpkg'
+          vcpkgGitCommitId: 'a42af01b72c28a8e1d7b48107b33e4f286a55ef6'
+          vcpkgJsonGlob: '**/vcpkg.json'
+
+      - name: Configure CMake
+        run: >
+          cmake -B build
+          -DCMAKE_BUILD_TYPE=Debug
+          -DCMAKE_TOOLCHAIN_FILE=${{ github.workspace }}/vcpkg/scripts/buildsystems/vcpkg.cmake
+
+      - name: Build
+        run: cmake --build build
+
+      - name: Run tests with Valgrind
+        working-directory: build
+        run: |
+          # Run each test executable with Valgrind
+          for test_exe in tests package_test; do
+            if [ -f "$test_exe" ]; then
+              echo "Running $test_exe with Valgrind..."
+              valgrind --tool=memcheck --leak-check=full --error-exitcode=1 ./$test_exe
+            fi
+          done
+
+  # Job 4: Code Coverage (Linux only)
+  coverage:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install coverage tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcov lcov
+
+      - name: Setup vcpkg
+        uses: lukka/run-vcpkg@v11
+        with:
+          vcpkgDirectory: '${{ github.workspace }}/vcpkg'
+          vcpkgGitCommitId: 'a42af01b72c28a8e1d7b48107b33e4f286a55ef6'
+          vcpkgJsonGlob: '**/vcpkg.json'
+
+      - name: Configure CMake with coverage
+        run: >
+          cmake -B build
+          -DCMAKE_BUILD_TYPE=Debug
+          -DCMAKE_TOOLCHAIN_FILE=${{ github.workspace }}/vcpkg/scripts/buildsystems/vcpkg.cmake
+          -DCMAKE_C_FLAGS="--coverage -fprofile-arcs -ftest-coverage"
+
+      - name: Build
+        run: cmake --build build
+
+      - name: Run tests
+        working-directory: build
+        run: ctest --output-on-failure
+
+      - name: Generate coverage report
+        run: |
+          lcov --directory build --capture --output-file coverage.info
+          lcov --remove coverage.info '/usr/*' --output-file coverage.info
+          lcov --remove coverage.info '*/vcpkg_installed/*' --output-file coverage.info
+          lcov --list coverage.info
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          file: ./coverage.info
+          flags: unittests
+          name: codecov-umbrella
+
+  # Job 5: Security scan
+  security-scan:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+
+      - name: Upload Trivy scan results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v2
+        if: always()
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+  # Job 6: Package and Release (only on tags)
+  package-and-release:
+    if: github.event_name == 'release'
+    needs: [build-and-test, static-analysis]
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup vcpkg
+        uses: lukka/run-vcpkg@v11
+        with:
+          vcpkgDirectory: '${{ github.workspace }}/vcpkg'
+          vcpkgGitCommitId: 'a42af01b72c28a8e1d7b48107b33e4f286a55ef6'
+          vcpkgJsonGlob: '**/vcpkg.json'
+
+      - name: Configure CMake
+        run: >
+          cmake -B build
+          -DCMAKE_BUILD_TYPE=Release
+          -DCMAKE_TOOLCHAIN_FILE=${{ github.workspace }}/vcpkg/scripts/buildsystems/vcpkg.cmake
+
+      - name: Build
+        run: cmake --build build
+
+      - name: Create package
+        run: |
+          cd build
+          cpack
+
+      - name: Upload release assets
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: build/*.tar.gz
+          asset_name: modern-c-package-demo-${{ github.event.release.tag_name }}.tar.gz
+          asset_content_type: application/gzip
