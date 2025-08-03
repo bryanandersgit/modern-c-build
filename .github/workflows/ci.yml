@@ -190,9 +190,9 @@ jobs:
 
   # Job 5: Package and Release (only on tags)
   package-and-release:
-    if: github.event_name == 'release'
-    needs: [build-and-test, static-analysis]
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
 
     steps:
       - name: Checkout repository
@@ -202,26 +202,75 @@ jobs:
         uses: lukka/run-vcpkg@v11
         with:
           vcpkgDirectory: '${{ github.workspace }}/vcpkg'
-          vcpkgGitCommitId: '903956eff7cb94774a9e805ff573c000afc43e3e'
+          vcpkgGitCommitId: '2024.11.16'
           vcpkgJsonGlob: '**/vcpkg.json'
 
       - name: Configure CMake
-        run: cmake -B build -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Debug -DCMAKE_TOOLCHAIN_FILE=${{ github.workspace }}/vcpkg/scripts/buildsystems/vcpkg.cmake -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ -DCMAKE_C_FLAGS="--coverage -fprofile-arcs -ftest-coverage"
+        run: cmake -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=${{ github.workspace }}/vcpkg/scripts/buildsystems/vcpkg.cmake
 
       - name: Build
         run: cmake --build build
 
-      - name: Create package
+      - name: Run tests
+        working-directory: build
+        run: ctest --output-on-failure
+
+      - name: Create packages
         run: |
           cd build
-          cpack
+          cpack -G "TGZ;ZIP"  # Create both tar.gz and zip
+          echo "=== Generated packages ==="
+          ls -la *.tar.gz *.zip 2>/dev/null || true
 
-      - name: Upload release assets
-        uses: actions/upload-release-asset@v1
+      - name: Generate changelog
+        id: changelog
+        run: |
+          # Get the previous release tag
+          PREVIOUS_TAG=$(git describe --tags --abbrev=0 HEAD~1 2>/dev/null || echo "")
+          CURRENT_TAG=${{ github.ref_name }}
+          
+          # Create temporary changelog file
+          CHANGELOG_FILE=$(mktemp)
+          
+          echo "# Release $CURRENT_TAG" > "$CHANGELOG_FILE"
+          echo "" >> "$CHANGELOG_FILE"
+          
+          # Create changelog file directly with echo commands
+          echo "# Release $CURRENT_TAG" > release_changelog.md
+          echo "" >> release_changelog.md
+          echo "## What's Changed in This Release" >> release_changelog.md
+          echo "" >> release_changelog.md
+          
+          if [ -n "$PREVIOUS_TAG" ]; then
+            echo "**Full Changelog**: https://github.com/${{ github.repository }}/compare/${PREVIOUS_TAG}...$CURRENT_TAG" >> release_changelog.md
+            echo "" >> release_changelog.md
+            echo "### Commits since $PREVIOUS_TAG:" >> release_changelog.md
+            git log --pretty=format:"- %s (%h)" ${PREVIOUS_TAG}..HEAD >> release_changelog.md
+          else
+            echo "**Initial Release** " >> release_changelog.md
+            echo "" >> release_changelog.md
+            echo "### All commits in this release:" >> release_changelog.md
+            git log --pretty=format:"- %s (%h)" HEAD >> release_changelog.md
+          fi
+          
+          echo "" >> release_changelog.md
+          echo "---" >> release_changelog.md
+          echo "*Changelog generated automatically from git commits*" >> release_changelog.md
+          
+          # Simple variable assignment - no heredoc syntax at all
+          echo "changelog_file=release_changelog.md" >> $GITHUB_OUTPUT
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: Release ${{ github.ref_name }}
+          body: ${{ steps.changelog.outputs.changelog }}
+          files: |
+            build/*.tar.gz
+            build/*.zip
+          generate_release_notes: true
+          draft: false
+          prerelease: ${{ contains(github.ref_name, '-rc') || contains(github.ref_name, '-beta') || contains(github.ref_name, '-alpha') }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ github.event.release.upload_url }}
-          asset_path: build/*.tar.gz
-          asset_name: modern-c-package-demo-${{ github.event.release.tag_name }}.tar.gz
-          asset_content_type: application/gzip
