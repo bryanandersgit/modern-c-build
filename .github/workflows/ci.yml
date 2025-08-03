@@ -155,13 +155,12 @@ jobs:
           ninja-build \
           gcc \
           g++ \
-          gcov \
           lcov \
           pkg-config \
           curl \
           zip \
           unzip \
-          tar\
+          tar \
           python3-pip
           sudo python3 -m pip install gcovr
 
