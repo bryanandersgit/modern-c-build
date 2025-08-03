@@ -86,8 +86,7 @@ jobs:
           vcpkgJsonGlob: '**/vcpkg.json'
 
       - name: Configure CMake with clang-tidy
-        run: >
-          run: cmake -B build -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Debug -DCMAKE_TOOLCHAIN_FILE=${{ github.workspace }}/vcpkg/scripts/buildsystems/vcpkg.cmake -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ -DCMAKE_C_FLAGS="--coverage -fprofile-arcs -ftest-coverage" -DCMAKE_C_CLANG_TIDY="clang-tidy;--warnings-as-errors=*"
+        run: cmake -B build -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Debug -DCMAKE_TOOLCHAIN_FILE=${{ github.workspace }}/vcpkg/scripts/buildsystems/vcpkg.cmake -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ -DCMAKE_C_FLAGS="--coverage -fprofile-arcs -ftest-coverage" -DCMAKE_C_CLANG_TIDY="clang-tidy;--warnings-as-errors=*"
 
       - name: Build with static analysis
         run: cmake --build build
