@@ -22,7 +22,7 @@ jobs:
         build_type: [Release, Debug]
 
     runs-on: ${{ matrix.os }}
-    environment: build
+    environment: Build
     
     steps:
       - name: Checkout repository
@@ -69,7 +69,7 @@ jobs:
   # Job 2: Static Analysis with clang-tidy
   static-analysis:
     runs-on: ubuntu-latest
-    environment: build
+    environment: Build
 
     steps:
       - name: Checkout repository
@@ -96,7 +96,7 @@ jobs:
   # Job 3: Memory check with Valgrind (Linux only)
   memory-check:
     runs-on: ubuntu-latest
-    environment: build
+    environment: Build
 
     steps:
       - name: Checkout repository
@@ -134,7 +134,7 @@ jobs:
   # Job 4: Code Coverage (Linux only)
   coverage:
     runs-on: ubuntu-latest
-    environment: build
+    environment: Build
 
     steps:
       - name: Checkout repository
@@ -195,7 +195,7 @@ jobs:
   # Job 5: Package and Release (only on tags)
   package-and-release:
     runs-on: ubuntu-latest
-    environment: build
+    environment: Build
     permissions:
       contents: write
 

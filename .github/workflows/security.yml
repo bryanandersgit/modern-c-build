@@ -15,7 +15,7 @@ jobs:
   trivy-scan:
     name: Trivy Security Scan
     runs-on: ubuntu-latest
-    environment: build
+    environment: Build
     permissions:
       contents: read
       security-events: write
@@ -99,7 +99,7 @@ jobs:
   dependency-scan:
     name: Dependency Security Scan
     runs-on: ubuntu-latest
-    environment: build
+    environment: Build
     if: github.event_name == 'pull_request'
     permissions:
       contents: read
@@ -118,7 +118,7 @@ jobs:
   secrets-scan:
     name: Secret Scanning
     runs-on: ubuntu-latest
-    environment: build
+    environment: Build
     permissions:
       contents: read
       security-events: write
@@ -143,7 +143,7 @@ jobs:
   license-scan:
     name: License Compliance
     runs-on: ubuntu-latest
-    environment: build
+    environment: Build
     permissions:
       contents: read
 
