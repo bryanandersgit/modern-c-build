@@ -82,6 +82,7 @@ bool test_math_edge_cases(void) {
     
     // Test division by very small number (near zero)
     result = safe_divide(10.0, 1e-15, &success);
+    printf("Small number divinsion result: %f", result);
     TEST_ASSERT(!success, "Division by near-zero should fail");
     
     // Test with NULL success pointer
