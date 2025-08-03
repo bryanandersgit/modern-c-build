@@ -87,7 +87,7 @@ static int read_double(const char *prompt, double *value) {
 }
 
 int main(void) {
-    int choice;
+    int choice = -1;
     double a, b, result;
     int n;
     bool success;

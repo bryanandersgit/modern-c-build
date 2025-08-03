@@ -8,7 +8,7 @@ double safe_divide(double a, double b, bool *success) {
     if (success) *success = false;
     
     if (fabs(b) < 1e-10) {
-        fprintf(stderr, "Error: Division by zero\n");
+        fputs("Error: Division by zero\n", stderr);
         return 0.0;
     }
     

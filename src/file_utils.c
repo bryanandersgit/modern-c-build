@@ -47,7 +47,11 @@ char *read_entire_file(const char *filepath) {
 
     FILE *file = fopen(filepath, "rb");
     if (!file) {
-        fprintf(stderr, "Error opening file '%s': %s\n", filepath, strerror(errno));
+        fputs("Error opening file '", stderr);
+        fputs(filepath ? filepath : "unknown", stderr);
+        fputs("': ", stderr);
+        fputs(strerror(errno), stderr);
+        fputs("\n", stderr);
         return NULL;
     }
 
@@ -57,13 +61,17 @@ char *read_entire_file(const char *filepath) {
     fseek(file, 0, SEEK_SET);
 
     if (size < 0) {
-        fprintf(stderr, "Error getting file size for '%s'\n", filepath);
+        fputs("Error getting file size for '", stderr);
+        fputs(filepath ? filepath : "unknown", stderr);
+        fputs("'\n", stderr);
         fclose(file);
         return NULL;
     }
 
     if ((unsigned long) size > SIZE_MAX - 1) {
-        fprintf(stderr, "File '%s' is too large\n", filepath);
+        fputs("File '", stderr);
+        fputs(filepath ? filepath : "unknown", stderr);
+        fputs("'is too large\n", stderr);
         fclose(file);
         return NULL;
     }
@@ -73,7 +81,9 @@ char *read_entire_file(const char *filepath) {
     // Allocate buffer
     char *buffer = malloc(file_size + 1);
     if (!buffer) {
-        fprintf(stderr, "Error allocating memory for file '%s'\n", filepath);
+        fputs("Error allocating memory for file '", stderr);
+        fputs(filepath ? filepath : "unknown", stderr);
+        fputs("'is too large\n", stderr);
         fclose(file);
         return NULL;
     }
@@ -83,7 +93,9 @@ char *read_entire_file(const char *filepath) {
     fclose(file);
 
     if (bytes_read != (size_t)size) {
-        fprintf(stderr, "Error reading file '%s'\n", filepath);
+        fputs("Error reading file '", stderr);
+        fputs(filepath ? filepath : "unknown", stderr);
+        fputs("'\n", stderr);
         free(buffer);
         return NULL;
     }
@@ -97,8 +109,11 @@ bool write_string_to_file(const char *filepath, const char *content) {
 
     FILE *file = fopen(filepath, "wb");  // Use binary mode to avoid line ending conversion
     if (!file) {
-        fprintf(stderr, "Error opening file '%s' for writing: %s\n",
-                filepath, strerror(errno));
+        fputs("Error reading file '", stderr);
+        fputs(filepath ? filepath : "unknown", stderr);
+        fputs("' for writing: ", stderr);
+        fputs(strerror(errno), stderr);
+        fputs("'\n", stderr);
         return false;
     }
 
@@ -107,7 +122,9 @@ bool write_string_to_file(const char *filepath, const char *content) {
     fclose(file);
 
     if (bytes_written != content_len) {
-        fprintf(stderr, "Error writing to file '%s'\n", filepath);
+        fputs("Error writing to file '", stderr);
+        fputs(filepath ? filepath : "unknown", stderr);
+        fputs("'\n", stderr);
         return false;
     }
 
