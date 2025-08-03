@@ -1,0 +1,22 @@
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Allow common false positives"
+
+secrets = [
+    "AKIAIMNOJVGFDXXXE4OA",  # AWS documentation example
+    "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY",  # AWS example secret key
+]
+
+paths = [
+    '''README\.md''',
+    '''docs/.*''',
+    '''test/.*''',
+    '''examples/.*''',
+]
+
+[[rules]]
+id = "aws-access-token"
+[[rules.allowlist]]
+paths = ['''.*\.md$''']
