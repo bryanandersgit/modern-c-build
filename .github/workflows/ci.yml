@@ -149,7 +149,20 @@ jobs:
       - name: Install coverage tools
         run: |
           sudo apt-get update
-          sudo apt-get install -y lcov python3-pip
+          sudo apt-get install -y \
+          build-essential \
+          cmake \
+          ninja-build \
+          gcc \
+          g++ \
+          gcov \
+          lcov \
+          pkg-config \
+          curl \
+          zip \
+          unzip \
+          tar\
+          python3-pip
           sudo python3 -m pip install gcovr
 
       - name: Setup vcpkg
@@ -162,9 +175,12 @@ jobs:
       - name: Configure CMake with coverage
         run: >
           cmake -B build
-          -DCMAKE_BUILD_TYPE=Debug
-          -DCMAKE_TOOLCHAIN_FILE=${{ github.workspace }}/vcpkg/scripts/buildsystems/vcpkg.cmake
-          -DCMAKE_C_FLAGS="--coverage -fprofile-arcs -ftest-coverage"
+            -G "Unix Makefiles"
+            -DCMAKE_BUILD_TYPE=Debug
+            -DCMAKE_TOOLCHAIN_FILE=${{ github.workspace }}/vcpkg/scripts/buildsystems/vcpkg.cmake
+            -DCMAKE_C_COMPILER=gcc
+            -DCMAKE_CXX_COMPILER=g++
+            -DCMAKE_C_FLAGS="--coverage -fprofile-arcs -ftest-coverage"
 
       - name: Build
         run: cmake --build build
