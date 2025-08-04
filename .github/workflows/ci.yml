@@ -123,14 +123,7 @@ jobs:
 
       - name: Run tests with Valgrind
         working-directory: build
-        run: |
-          # Run each test executable with Valgrind
-          for test_exe in tests package_test; do
-            if [ -f "$test_exe" ]; then
-              echo "Running $test_exe with Valgrind..."
-              valgrind --tool=memcheck --leak-check=full --error-exitcode=1 ./$test_exe
-            fi
-          done
+        run: ctest -T memcheck --output-on-failure
 
   # Job 4: Code Coverage (Linux only)
   coverage:
