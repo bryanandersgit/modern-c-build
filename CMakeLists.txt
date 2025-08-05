@@ -77,6 +77,9 @@ target_include_directories(demo PRIVATE include)
 # Enable testing
 enable_testing() # dnables CMake's testing framework
 
+# Enable dashboard scripting (creates DartConfiguration.tcl)
+include(CTest)
+
 # Add test executable
 add_executable(tests test/test_runner.c)
 target_link_libraries(tests myutils)

@@ -116,7 +116,7 @@ jobs:
           vcpkgJsonGlob: '**/vcpkg.json'
 
       - name: Configure CMake
-        run: cmake -B build -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Debug -DCMAKE_TOOLCHAIN_FILE=${{ github.workspace }}/vcpkg/scripts/buildsystems/vcpkg.cmake -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ -DCMAKE_C_FLAGS="--coverage -fprofile-arcs -ftest-coverage"
+        run: cmake -B build -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Debug -DCMAKE_TOOLCHAIN_FILE=${{ github.workspace }}/vcpkg/scripts/buildsystems/vcpkg.cmake -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ -DCMAKE_C_FLAGS="--coverage -fprofile-arcs -ftest-coverage" -DMEMORYCHECK_COMMAND=$(which valgrind) -DMEMORYCHECK_COMMAND_OPTIONS="--tool=memcheck --leak-check=full --error-exitcode=1"
 
       - name: Build
         run: cmake --build build
