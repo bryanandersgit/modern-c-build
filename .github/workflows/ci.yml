@@ -60,7 +60,7 @@ jobs:
         uses: actions/upload-artifact@v4
         if: matrix.build_type == 'Release'
         with:
-          name: binaries-${{ matrix.os }}
+          name: binaries-${{ matrix.os }}-${{ matrix.build_type }}
           path: |
             build/bin/*
             build/Release/*.exe
@@ -200,29 +200,68 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup vcpkg
-        uses: lukka/run-vcpkg@v11
+      - name: Get project info from CMake
+        id: project_info
+        run: |
+          # Extract project name from CMakeLists.txt
+              PROJECT_NAME=$(awk '/^project\(/{
+              name=$0
+              while(name !~ /\)/ && getline > 0) {
+              name = name " " $0
+            }
+              gsub(/.*project\(/, "", name)
+              gsub(/[ \t\n].*/, "", name)
+              print name
+              exit
+          }' CMakeLists.txt)
+          echo "project_name=$PROJECT_NAME" >> $GITHUB_OUTPUT
+
+      - name: Download Linux artifacts
+        uses: actions/download-artifact@v4
         with:
-          vcpkgDirectory: '${{ github.workspace }}/vcpkg'
-          vcpkgGitCommitId: '${{ vars.VCPKG_COMMIT_ID }}'
-          vcpkgJsonGlob: '**/vcpkg.json'
+          name: binaries-ubuntu-latest-Release
+          path: ./artifacts/linux/
 
-      - name: Configure CMake
-        run: cmake -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=${{ github.workspace }}/vcpkg/scripts/buildsystems/vcpkg.cmake
+      - name: Download Windows artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: binaries-windows-latest-Release
+          path: ./artifacts/windows/
 
-      - name: Build
-        run: cmake --build build
+      - name: Download macOS artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: binaries-macos-latest-Release
+          path: ./artifacts/macos/
 
-      - name: Run tests
-        working-directory: build
-        run: ctest --output-on-failure
+      # Optional: Verify what we downloaded
+      - name: List downloaded artifacts
+        run: |
+          echo "=== Downloaded artifacts ==="
+          find ./artifacts -type f -ls
 
+  # Create platform-specific packages
       - name: Create packages
         run: |
-          cd build
-          cpack -G "TGZ;ZIP"  # Create both tar.gz and zip
+          PROJECT_NAME="${{ steps.project_info.outputs.project_name }}"
+          VERSION="${{ github.ref_name }}"
+          
+          mkdir -p packages
+          
+          # Create Linux package
+          cd artifacts/linux && tar -czf ../../packages/ModernCBuild-linux-x64.tar.gz *
+          cd ../..
+          
+          # Create Windows package  
+          cd artifacts/windows && zip -r ../../packages/ModernCBuild-windows-x64.zip *
+          cd ../..
+          
+          # Create macOS package
+          cd artifacts/macos && tar -czf ../../packages/ModernCBuild-macos-x64.tar.gz *
+          cd ../..
+          
           echo "=== Generated packages ==="
-          ls -la *.tar.gz *.zip 2>/dev/null || true
+          ls -la packages/
 
       - name: Generate changelog
         id: changelog
@@ -269,8 +308,7 @@ jobs:
           name: Release ${{ github.ref_name }}
           body: ${{ steps.changelog.outputs.changelog }}
           files: |
-            build/*.tar.gz
-            build/*.zip
+            packages/*
           generate_release_notes: true
           draft: false
           prerelease: ${{ contains(github.ref_name, '-rc') || contains(github.ref_name, '-beta') || contains(github.ref_name, '-alpha') }}
